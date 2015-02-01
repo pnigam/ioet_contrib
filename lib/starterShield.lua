@@ -57,6 +57,28 @@ LED.flash=function(color,duration)
 			end)
 end
 
+LED.isOn=function(color)
+   return storm.io.getd(storm.io[LED.pins[color]]) == 1
+end
+
+function blinker(color)
+   local state = 0
+   return function ()
+      if state  == 1 then 
+	 print ("blink on", state)
+	 shield.LED.on(color)
+      else 
+	 print ("blink off", state)
+	 shield.LED.off(color)
+      end
+      state=1-state
+   end
+end
+
+LED.blink = function(color, duration)
+   t = storm.os.invokePeriodically(1*storm.os.SECOND, blinker(color))
+   storm.os.invokeLater(duration*1*storm.os.SECOND, function() storm.os.cancel(t) end)
+end
 ----------------------------------------------
 -- Buzz module
 -- provide basic buzzer functions
@@ -89,6 +111,11 @@ Buzz.stop = function()
    print ("Buzz.stop")
    Buzz.run = false		-- stop Buzz.go partner
 -- configure pins to a low power state
+end
+
+Buzz.timedBuzz = function(duration)
+   Buzz.go()
+   storm.os.invokeLater(1*duration*storm.os.SECOND, function() Buzz.stop() end)
 end
 
 ----------------------------------------------
@@ -129,6 +156,13 @@ Button.whenever = function(button, transition, action)
    -- register call back to fire when button is pressed
    local pin = Button.pins[button]
    storm.io.watch_all(storm.io[transition], storm.io[pin], action)
+end
+
+Button.timedWhenever = function(button, transition, action, duration)
+   -- register call back to fire when button is pressed
+   local pin = Button.pins[button]
+   local t = storm.io.watch_all(storm.io[transition], storm.io[pin], action)
+   storm.os.invokeLater(duration*storm.os.SECOND, function() storm.io.cancel_watch(t) end)
 end
 
 Button.when = function(button, transition, action)

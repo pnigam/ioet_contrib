@@ -1,3 +1,5 @@
+shield = require "starter"
+math = require "math"
 require "cord"
 sh = require "stormsh"
 
