@@ -26,7 +26,7 @@ function REG:w(reg, value)
     count = 1 + value / 8 + extra
     arr = storm.array.create(count, storm.array.UINT8)
     arr:set(1, reg)
-    for i=2,count do arr:set(i, value >> 8)
+    for i=2,count do arr:set(i, value >> 8) end
     storm.i2c.write(storm.i2c.INT + address, storm.i2c.START, arr, function(status) print (status) end)
     -- TODO:
     -- create array with address and value
