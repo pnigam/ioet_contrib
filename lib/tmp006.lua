@@ -1,15 +1,15 @@
-REG = require("i2creg")
+REG = require "i2creg"
 bit = require "bit"
 
 local codes = {
-	 TMP006_B0 = -0.0000294,
-	 TMP006_B1 = -0.00000057,
-	 TMP006_B2 = 0.00000000463,
-	 TMP006_C2 = 13.4,
-	 TMP006_TREF = 298.15,
-	 TMP006_A2 = -0.00001678,
-	 TMP006_A1 = 0.00175,
-	 TMP006_S0 = 6.4,
+--	 TMP006_B0 = -0.0000294,
+--	 TMP006_B1 = -0.00000057,
+--	 TMP006_B2 = 0.00000000463,
+--	 TMP006_C2 = 13.4,
+--	 TMP006_TREF = 298.15,
+--	 TMP006_A2 = -0.00001678,
+--	 TMP006_A1 = 0.00175,
+--	 TMP006_S0 = 6.4,
 
 	 TMP006_CFG_RESET    = 0x8000,
 	 TMP006_CFG_MODEON   = 0x7000,
@@ -37,12 +37,12 @@ function TMP006:new()
 end
 
 function TMP006:init()
-    self.reg:w(TMP006_CONFIG, bit.bor(TMP006_CFG_8SAMPLE, TMP006_CFG_MODEON, TMP006_CFG_DRDYEN))
+    self.reg:w(codes.TMP006_CONFIG, bit.bor(codes.TMP006_CFG_8SAMPLE, codes.TMP006_CFG_MODEON, codes.TMP006_CFG_DRDYEN))
 end
 
 function TMP006:readRawDieTemperature()
     local addr = storm.array.create(2, storm.array.UINT8)
-    addr:set(1, TMP006_TAMB)
+    addr:set(1, codes.TMP006_TAMB)
     local rv = cord.await(storm.i2c.write,  self.port + self.addr,  storm.i2c.START, addr)
     if (rv ~= storm.i2c.OK) then
         print ("ERROR ON I2C: ",rv)
@@ -52,12 +52,14 @@ function TMP006:readRawDieTemperature()
     if (rv ~= storm.i2c.OK) then
         print ("ERROR ON I2C: ",rv)
     end
-    return bit.band(bit.lshift(arr:get(1), 6), bit.rshift(arr:get(2), 2))
+    --print(dat:get(1), dat:get(2))
+    --print(bit.lshift(dat:get(1), 6),  bit.rshift(dat:get(2), 2))
+    return bit.bor(bit.lshift(dat:get(1), 6), bit.rshift(dat:get(2), 2))
 end
 
 function TMP006:readRawVoltage()
     local addr = storm.array.create(2, storm.array.UINT8)
-    addr:set(1, TMP006_VOBJ)
+    addr:set(1, codes.TMP006_VOBJ)
     local rv = cord.await(storm.i2c.write,  self.port + self.addr,  storm.i2c.START, addr)
     if (rv ~= storm.i2c.OK) then
         print ("ERROR ON I2C: ",rv)
@@ -67,7 +69,7 @@ function TMP006:readRawVoltage()
     if (rv ~= storm.i2c.OK) then
         print ("ERROR ON I2C: ",rv)
     end
-    return bit.band(bit.lshift(arr:get(1),8), arr:get(2))
+    return bit.bor(bit.lshift(arr:get(1),8), arr:get(2))
 
 end
 
