@@ -106,7 +106,7 @@ Buzz.go = function(delay)
 end
 
 Buzz.stop = function()
-   print ("Buzz.stop")
+   -- print ("Buzz.stop")
    Buzz.run = false		-- stop Buzz.go partner
 -- configure pins to a low power state
 end
