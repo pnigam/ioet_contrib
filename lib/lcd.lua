@@ -42,6 +42,9 @@ local codes = {
     LCD_COMMAND = 0x80,
     LCD_WRITE = 0x40,
     LED_OUTPUT = 0x08,
+    REG_RED    = 0x04,
+    REG_GREEN = 0x03,
+    REG_BLUE  = 0x02,
 }
 
 local LCD = {}
@@ -96,6 +99,10 @@ LCD.init = function(lines, dotsize)
             LCD.display()
             cord.await(storm.os.invokeLater, 50*storm.os.MILLISECOND)
 
+            LCD.rgbreg:w(0, 0)
+            LCD.rgbreg:w(1, 0)
+            LCD.rgbreg:w(codes.LED_OUTPUT, 0xAA)
+
 end
 LCD.setCursor = function(row, col)
     if row == 0 then
@@ -116,6 +123,11 @@ end
 LCD.clear = function ()
     LCD.command(codes.LCD_CLEARDISPLAY)
     cord.await(storm.os.invokeLater, 2*storm.os.MILLISECOND)
+end
+LCD.setBacklight = function(red, green, blue)
+    LCD.rgbreg:w(codes.REG_RED, red)
+    LCD.rgbreg:w(codes.REG_GREEN, green)
+    LCD.rgbreg:w(codes.REG_BLUE, blue)
 end
 
 return LCD
