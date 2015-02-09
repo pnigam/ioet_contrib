@@ -1,4 +1,5 @@
-
+REG = require "i2creg"
+string = require "string"
 
 local codes = {
     LCD_CLEARDISPLAY = 0x01,
@@ -37,16 +38,33 @@ local codes = {
     LCD_1LINE = 0x00,
     LCD_5x10DOTS = 0x04,
     LCD_5x8DOTS = 0x00,
+
+    LCD_COMMAND = 0x80,
+    LCD_WRITE = 0x40,
+    LED_OUTPUT = 0x08,
 }
 
 local LCD = {}
 
+LCD.new = function(lcd_port, lcd_addr, rgb_port, rgb_addr)
+    LCD.lcdreg = REG:new(lcd_port, lcd_addr)
+    LCD.rgbreg = REG:new(rgb_port, rgb_addr)
+    return LCD
+end
 
 LCD.command = function(val)
-    --TODO
+    LCD.lcdreg:w(codes.LCD_COMMAND, val)
 end
+
 LCD.write = function (char)
-    --TODO
+    LCD.lcdreg:w(codes.LCD_WRITE, char)
+end
+
+LCD.writeString = function(str)
+    local i
+    for i = 1, string.len(str) do
+        LCD.write(string.byte(str:sub(i, i)))
+    end
 end
 
 LCD.init = function(lines, dotsize)
@@ -77,6 +95,7 @@ LCD.init = function(lines, dotsize)
             LCD._dc  = codes.LCD_DISPLAYON + codes.LCD_CURSORON + codes.LCD_BLINKON
             LCD.display()
             cord.await(storm.os.invokeLater, 50*storm.os.MILLISECOND)
+
 end
 LCD.setCursor = function(row, col)
     if row == 0 then
