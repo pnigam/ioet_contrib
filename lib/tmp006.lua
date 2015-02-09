@@ -52,8 +52,6 @@ function TMP006:readRawDieTemperature()
     if (rv ~= storm.i2c.OK) then
         print ("ERROR ON I2C: ",rv)
     end
-    --print(dat:get(1), dat:get(2))
-    --print(bit.lshift(dat:get(1), 6),  bit.rshift(dat:get(2), 2))
     return bit.bor(bit.lshift(dat:get(1), 6), bit.rshift(dat:get(2), 2))
 end
 
@@ -69,8 +67,66 @@ function TMP006:readRawVoltage()
     if (rv ~= storm.i2c.OK) then
         print ("ERROR ON I2C: ",rv)
     end
-    return bit.bor(bit.lshift(arr:get(1),8), arr:get(2))
+    return bit.bor(bit.lshift(dat:get(1),8), dat:get(2))
+end
 
+-- Floating point doesn't seem to work, so round to near degree celcius
+function TMP006:readDieTempC()
+    local val = self:readRawDieTemperature()
+    local j = 0
+    while val > 32 do
+        val = val -32
+        j = j + 1
+    end
+    return j
+    --return self:readRawDieTemperature() * 0.03125
+end
+
+--[[
+function TMP006:readObjTempC() 
+  local tempdie = self:readRawDieTemperature()
+  local vobj = self:readRawVoltage()
+  Vobj *= 156.25;  // 156.25 nV per LSB
+  Vobj /= 1000000000; // nV -> V
+  Tdie *= 0.03125; // convert to celsius
+  Tdie += 273.15; // convert to kelvin
+
+  -- Equations for calculating temperature found in section 5.1 in the user guide
+  double tdie_tref = Tdie - TMP006_TREF;
+  double S = (1 + TMP006_A1*tdie_tref + 
+      TMP006_A2*tdie_tref*tdie_tref);
+  S *= TMP006_S0;
+  S /= 10000000;
+  S /= 10000000;
+
+  double Vos = TMP006_B0 + TMP006_B1*tdie_tref + TMP006_B2*tdie_tref*tdie_tref;
+
+  double fVobj = (Vobj - Vos) + TMP006_C2*(Vobj-Vos)*(Vobj-Vos);
+
+  double Tobj = sqrt(sqrt(Tdie * Tdie * Tdie * Tdie + fVobj/S));
+
+  Tobj -= 273.15; // Kelvin -> *C
+  return Tobj
+end 
+]]--
+
+function TMP006:divide(a, b)
+    local j = 0    
+    while a > b do
+        a = a - b
+        j = j + 1
+    end
+    return j
+end
+
+function TMP006:multiply(a, b)
+    print(a, b)    
+    local val = a    
+    while b > 1 do
+        val = val + a
+        b = b - 1
+    end
+    return val
 end
 
 return TMP006
