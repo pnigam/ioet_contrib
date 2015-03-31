@@ -2,7 +2,7 @@
  * This file defines the contrib native C functions. You can access these as
  * storm.n.<function>
  * for example storm.n.hello()
- */
+ */  
 
 #include "lua.h"
 #include "lualib.h"
@@ -25,6 +25,10 @@
 
 //Include some libs as C files into this file
 #include "natlib/util.c"
+#include "natlib/svcd.c"
+#include "natlib/analog/analog.c"
+#include "natlib/led.c"
+
 
 ////////////////// BEGIN FUNCTIONS /////////////////////////////
 
@@ -168,6 +172,25 @@ static int contrib_helloX_tail(lua_State *L)
     }
 }
 
+int toggle_pin(lua_State *L) {
+	uint32_t volatile *reg_gpio = (uint32_t *)0x400E1004;
+	*reg_gpio = 1 << 16 | 1 << 12;
+	uint32_t volatile *reg_oder = (uint32_t *)0x400E1044;
+	*reg_oder = 1 << 16 | 1 << 12;
+	uint32_t volatile *reg_ovr;
+    reg_ovr = (uint32_t *)0x400E1054;
+    *reg_ovr = 1 << 16;
+    //reg_ovr = (uint32_t *)0x400E1054;
+    *reg_ovr = 1 << 12;
+
+    uint32_t z;
+	for (z = 0; z < 1000000000; z++);
+    printf("after loop");
+    reg_ovr = (uint32_t *)0x400E1058;
+    *reg_ovr = 1<<16 | 1 << 12;
+
+}
+
 ////////////////// BEGIN MODULE MAP /////////////////////////////
 const LUA_REG_TYPE contrib_native_map[] =
 {
@@ -176,6 +199,30 @@ const LUA_REG_TYPE contrib_native_map[] =
     { LSTRKEY( "fourth_root"), LFUNCVAL ( contrib_fourth_root_m1000 ) },
     { LSTRKEY( "run_foobar"), LFUNCVAL ( contrib_run_foobar ) },
     { LSTRKEY( "makecounter"), LFUNCVAL ( contrib_makecounter ) },
+	{ LSTRKEY( "toggle_pin"), LFUNCVAL (toggle_pin ) },
+
+    SVCD_SYMBOLS
+    ADCIFE_SYMBOLS
+    LED_SYMBOLS
+
+    /* Constants for the Temp sensor. */
+    // -- Register address --
+    { LSTRKEY( "TMP006_VOLTAGE" ), LNUMVAL(0x00)},
+    { LSTRKEY( "TMP006_LOCAL_TEMP" ), LNUMVAL(0x01)},
+    { LSTRKEY( "TMP006_CONFIG" ), LNUMVAL(0x02)},
+    { LSTRKEY( "TMP006_MFG_ID" ), LNUMVAL(0xFE)},
+    { LSTRKEY( "TMP006_DEVICE_ID" ), LNUMVAL(0xFF)},
+
+    // -- Config register values
+    { LSTRKEY( "TMP006_CFG_RESET" ), LNUMVAL(0x80)},
+    { LSTRKEY( "TMP006_CFG_MODEON" ), LNUMVAL(0x70)},
+    { LSTRKEY( "TMP006_CFG_1SAMPLE" ), LNUMVAL(0x00)},
+    { LSTRKEY( "TMP006_CFG_2SAMPLE" ), LNUMVAL(0x02)},
+    { LSTRKEY( "TMP006_CFG_4SAMPLE" ), LNUMVAL(0x04)},
+    { LSTRKEY( "TMP006_CFG_8SAMPLE" ), LNUMVAL(0x06)},
+    { LSTRKEY( "TMP006_CFG_16SAMPLE" ), LNUMVAL(0x08)},
+    { LSTRKEY( "TMP006_CFG_DRDYEN" ), LNUMVAL(0x01)},
+    { LSTRKEY( "TMP006_CFG_DRDY" ), LNUMVAL(0x80)},
 
     //The list must end with this
     { LNILKEY, LNILVAL }
